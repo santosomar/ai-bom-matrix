@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Bill of Materials (BOM) Explainer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .highlight {
+            background-color: #e0f2fe; /* sky-100 */
+            transform: scale(1.01);
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 4px 14px 0 rgba(0, 118, 255, 0.39);
+        }
+        .node {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .node:hover {
+            transform: scale(1.05);
+        }
+        .node-text {
+            font-size: 11px;
+            pointer-events: none;
+        }
+        .category-title {
+            font-weight: 600;
+            fill: #334155; /* slate-700 */
+        }
+        .line {
+            stroke: #cbd5e1; /* slate-300 */
+            stroke-width: 1.5;
+        }
+        /* For smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+
+        <!-- Header Section -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-2">Understanding the AI Bill of Materials</h1>
+            <p class="text-lg text-slate-600">An Interactive Guide to the SPDX 3.0 AI Profile</p>
+        </header>
+
+        <!-- Introduction -->
+        <div class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md mb-12">
+            <h2 class="text-2xl font-semibold text-slate-800 mb-3">What is an AI BOM?</h2>
+            <p class="text-slate-600 leading-relaxed">
+                An AI Bill of Materials (BOM) is a detailed inventory of all the components that make up an artificial intelligence system. Similar to a software BOM (SBOM), it provides a comprehensive list of ingredients, but is tailored for the unique complexities of AI. This includes datasets, models, software libraries, and crucial metadata about training, performance, and risk. The SPDX 3.0 AI Profile provides a standardized way to create these BOMs, fostering greater transparency, security, and responsible AI development.
+            </p>
+        </div>
+
+        <!-- Interactive Visualization -->
+        <div class="w-full bg-white rounded-xl shadow-md p-4 md:p-6 mb-12">
+            <h2 class="text-2xl font-semibold text-center text-slate-800 mb-6">Interactive AI System Overview</h2>
+            <div id="visualization-container" class="w-full overflow-x-auto">
+                 <svg id="ai-bom-svg" viewBox="0 0 800 550" class="w-full h-auto min-w-[700px]">
+                    <!-- Central Node -->
+                    <circle cx="400" cy="275" r="55" fill="#0284c7" />
+                    <text x="400" y="275" text-anchor="middle" dy=".3em" fill="white" font-weight="bold" font-size="16">AI System</text>
+                    
+                    <!-- Categories and connecting lines -->
+                    <g id="svg-nodes"></g>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Detailed Matrix Table -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <h2 class="text-2xl font-semibold text-slate-800 p-6">Key Properties & Terms Matrix</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[1000px] text-sm text-left text-slate-500">
+                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 w-1/5">Term/Property</th>
+                            <th scope="col" class="px-6 py-3 w-1/5">Core Concept</th>
+                            <th scope="col" class="px-6 py-3 w-1/5">Purpose & Importance</th>
+                            <th scope="col" class="px-6 py-3 w-2/5">Key Details & Examples</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bom-matrix-body" class="bg-white">
+                        <!-- Rows will be injected here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center mt-12 text-slate-500 text-sm">
+            <p>Built to demonstrate the concepts of the SPDX 3.0 AI Profile.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const matrixData = [
+                { term: 'AI/AIPackage', category: 'Core Components', concept: 'A discrete, identifiable component within an AI system.', purpose: 'Enables inventory tracking and management of all constituent parts of the AI system.', examples: 'Software libraries (e.g., TensorFlow, PyTorch), a specific model (e.g., GPT-4), or a dataset (e.g., ImageNet).' },
+                { term: 'AI/SafetyRiskAssessmentType', category: 'Risk & Compliance', concept: 'A classification of the safety risk level associated with a component.', purpose: 'To categorize and prioritize risks, ensuring that appropriate mitigation measures are applied.', examples: '`Low`, `Medium`, `High`, `Serious`.' },
+                { term: 'AI/autonomyType', category: 'Operational Context', concept: 'The level of an AI system\'s independent decision-making capability.', purpose: 'Determines the necessary degree of human oversight and defines the system\'s operational independence.', examples: 'Human-in-the-loop, human-over-the-loop, fully autonomous.' },
+                { term: 'AI/domain', category: 'Operational Context', concept: 'The specific industry or application area where the AI is intended to be used.', purpose: 'Provides context for the AI\'s function, relevance, and any domain-specific regulatory requirements.', examples: 'Healthcare, Automotive, Finance, Legal, E-commerce.' },
+                { term: 'AI/energyConsumption', category: 'Operational Context', concept: 'The amount of energy required to train, run, or use the AI system.', purpose: 'Assesses environmental impact (sustainability) and operational costs.', examples: 'Measured in kilowatt-hours (kWh) for training a model or energy per inference task.' },
+                { term: 'AI/hyperparameter', category: 'Training & Data', concept: 'Pre-defined configuration settings that govern the AI model\'s training process.', purpose: 'Crucial for reproducibility, performance tuning, and understanding how the model was trained.', examples: 'Learning Rate: `0.001`, Batch Size: `32`, Number of Layers: `12`.' },
+                { term: 'AI/informationAboutApplication', category: 'Operational Context', concept: 'Details describing the real-world application and use cases of the AI system.', purpose: 'Provides clarity on the system\'s intended purpose, scope, and practical implementation.', examples: 'Use Case: credit card fraud detection; Deployment: cloud-based API for financial institutions.' },
+                { term: 'AI/informationAboutTraining', category: 'Training & Data', concept: 'Comprehensive details about the data, algorithms, and methods used to train the model.', purpose: 'Essential for understanding model origins, potential biases, and ensuring reproducibility.', examples: 'Data sources, preprocessing steps, training algorithms (e.g., Adam optimizer), hardware used.' },
+                { term: 'AI/limitation', category: 'Performance & Evaluation', concept: 'Documentation of the known boundaries, weaknesses, and constraints of the AI system.', purpose: 'Promotes responsible AI usage by clearly stating where the system may not perform reliably.', examples: 'Inability to handle out-of-distribution data, vulnerability to specific adversarial attacks.' },
+                { term: 'AI/metric', category: 'Performance & Evaluation', concept: 'The quantitative criteria used to evaluate the performance of the AI model.', purpose: 'Provides an objective way to assess model effectiveness, accuracy, and overall quality.', examples: '`Accuracy`, `Precision`, `Recall`, `F1-Score`, `Mean Squared Error (MSE)`.' },
+                { term: 'AI/metricDecisionThreshold', category: 'Performance & Evaluation', concept: 'A specific value for a metric that triggers a particular decision or action.', purpose: 'Defines the explicit rules and criteria for automated decision-making within the system.', examples: '`If confidence_score > 0.95, accept prediction.` `If risk_score > 0.8, flag for human review.`' },
+                { term: 'AI/modelDataPreprocessing', category: 'Training & Data', concept: 'The steps taken to clean, transform, and prepare data before model training.', purpose: 'Ensures the quality, consistency, and relevance of training data, which directly impacts model performance.', examples: 'Normalization, scaling, feature engineering, handling of missing values.' },
+                { term: 'AI/modelExplainability', category: 'Performance & Evaluation', concept: 'The extent to which the AI model\'s internal workings and decisions can be understood by humans.', purpose: 'Builds trust, facilitates debugging, ensures accountability, and supports regulatory compliance.', examples: 'Methods used (e.g., SHAP, LIME), feature importance scores, decision path visualizations.' },
+                { term: 'AI/safetyRiskAssessment', category: 'Risk & Compliance', concept: 'A holistic evaluation of all safety risks associated with the complete AI system.', purpose: 'Provides a comprehensive overview of potential hazards for integrated risk management.', examples: 'A summary report detailing identified risks, their severity, and planned mitigation strategies.' },
+                { term: 'AI/sensitivePersonalInformation', category: 'Training & Data', concept: 'An indicator of whether the AI system processes any sensitive personal data.', purpose: 'Critical for ensuring data privacy, protection, and compliance with regulations like GDPR or CCPA.', examples: 'Types of data processed (e.g., health records, biometric data), data anonymization techniques used.' },
+                { term: 'AI/standardCompliance', category: 'Risk & Compliance', concept: 'A declaration of the specific standards, laws, and regulations the AI system adheres to.', purpose: 'Ensures the system meets required legal, ethical, and industry benchmarks for quality and safety.', examples: 'Adherence to ISO 9001, HIPAA, EU AI Act, NIST AI Risk Management Framework.' },
+                { term: 'AI/typeOfModel', category: 'Core Components', concept: 'The specific architectural class or category of the AI model.', purpose: 'Provides insight into the model\'s fundamental structure, capabilities, and inherent characteristics.', examples: '`Neural Network`, `Decision Tree`, `Support Vector Machine (SVM)`, `Large Language Model (LLM)`.' }
+            ];
+
+            const matrixBody = document.getElementById('bom-matrix-body');
+            
+            // Populate the matrix table
+            matrixData.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-slate-50 transition-colors duration-200';
+                row.setAttribute('data-term', item.term);
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-slate-900">${item.term}</td>
+                    <td class="px-6 py-4">${item.concept}</td>
+                    <td class="px-6 py-4">${item.purpose}</td>
+                    <td class="px-6 py-4">${item.examples.replace(/`/g, '<code class="bg-slate-200 text-slate-800 rounded px-1 py-0.5 text-xs">').replace(/\n/g, '<br>')}</td>
+                `;
+                matrixBody.appendChild(row);
+            });
+
+            // --- SVG Visualization Logic ---
+            const svgNodesContainer = document.getElementById('svg-nodes');
+            const categories = {};
+            
+            matrixData.forEach(item => {
+                if (!categories[item.category]) {
+                    categories[item.category] = [];
+                }
+                categories[item.category].push(item.term);
+            });
+            
+            const categoryPositions = {
+                'Core Components': { angle: 22.5, distance: 220, x: 485, y: 195 },
+                'Training & Data': { angle: 90, distance: 250, x: 400, y: 70 },
+                'Performance & Evaluation': { angle: 157.5, distance: 220, x: 315, y: 195 },
+                'Risk & Compliance': { angle: 225, distance: 220, x: 315, y: 355 },
+                'Operational Context': { angle: 292.5, distance: 250, x: 400, y: 480 },
+            };
+            
+            const nodeColors = {
+                'Core Components': '#22c55e', // green-500
+                'Training & Data': '#3b82f6', // blue-500
+                'Performance & Evaluation': '#a855f7', // purple-500
+                'Risk & Compliance': '#ef4444', // red-500
+                'Operational Context': '#f97316', // orange-500
+            };
+
+            const centralPoint = { x: 400, y: 275 };
+            let nodeAngleIncrement = 25;
+
+            Object.keys(categories).forEach(category => {
+                const pos = categoryPositions[category];
+                const color = nodeColors[category];
+                const terms = categories[category];
+                
+                // Draw line to category title
+                const lineToTitle = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                const categoryX = centralPoint.x + pos.distance * Math.cos(pos.angle * Math.PI / 180);
+                const categoryY = centralPoint.y - pos.distance * Math.sin(pos.angle * Math.PI / 180);
+                lineToTitle.setAttribute('x1', centralPoint.x);
+                lineToTitle.setAttribute('y1', centralPoint.y);
+                lineToTitle.setAttribute('x2', categoryX);
+                lineToTitle.setAttribute('y2', categoryY);
+                lineToTitle.setAttribute('class', 'line');
+                svgNodesContainer.appendChild(lineToTitle);
+                
+                // Category Title
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                title.setAttribute('x', categoryX);
+                title.setAttribute('y', categoryY);
+                title.setAttribute('text-anchor', 'middle');
+                title.setAttribute('class', 'category-title');
+                title.textContent = category;
+                svgNodesContainer.appendChild(title);
+
+                // Individual term nodes
+                terms.forEach((term, index) => {
+                    // Spread nodes around the category title
+                    const angleOffset = (index - (terms.length - 1) / 2) * nodeAngleIncrement;
+                    const nodeAngle = pos.angle + angleOffset;
+                    const nodeDist = pos.distance + 60;
+
+                    const nodeX = centralPoint.x + nodeDist * Math.cos(nodeAngle * Math.PI / 180);
+                    const nodeY = centralPoint.y - nodeDist * Math.sin(nodeAngle * Math.PI / 180);
+
+                    const nodeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    nodeGroup.setAttribute('class', 'node');
+                    nodeGroup.setAttribute('data-term', term);
+                    nodeGroup.setAttribute('transform', `translate(${nodeX}, ${nodeY})`);
+
+                    const nodeCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    nodeCircle.setAttribute('r', '25');
+                    nodeCircle.setAttribute('fill', color);
+                    nodeCircle.setAttribute('stroke', 'white');
+                    nodeCircle.setAttribute('stroke-width', '2');
+
+                    const nodeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    nodeText.setAttribute('text-anchor', 'middle');
+                    nodeText.setAttribute('fill', 'white');
+                    nodeText.setAttribute('class', 'node-text font-semibold');
+                    
+                    const termParts = term.split('/');
+                    const tspan1 = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                    tspan1.setAttribute('x', '0');
+                    tspan1.setAttribute('dy', '-0.3em');
+                    tspan1.textContent = termParts[0];
+                    const tspan2 = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                    tspan2.setAttribute('x', '0');
+                    tspan2.setAttribute('dy', '1.2em');
+                    tspan2.textContent = termParts[1];
+
+                    nodeText.appendChild(tspan1);
+                    nodeText.appendChild(tspan2);
+                    
+                    nodeGroup.appendChild(nodeCircle);
+                    nodeGroup.appendChild(nodeText);
+                    svgNodesContainer.appendChild(nodeGroup);
+                    
+                    // Line from category title to node
+                    const lineToNode = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    lineToNode.setAttribute('x1', categoryX);
+                    lineToNode.setAttribute('y1', categoryY);
+                    lineToNode.setAttribute('x2', nodeX);
+                    lineToNode.setAttribute('y2', nodeY);
+                    lineToNode.setAttribute('class', 'line');
+                    svgNodesContainer.insertBefore(lineToNode, svgNodesContainer.firstChild);
+                });
+            });
+
+            // --- Interactivity Logic ---
+            document.querySelectorAll('.node').forEach(node => {
+                node.addEventListener('click', function () {
+                    const term = this.getAttribute('data-term');
+                    const targetRow = document.querySelector(`tr[data-term="${term}"]`);
+
+                    if (targetRow) {
+                        // Remove previous highlights
+                        document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+
+                        // Scroll to and highlight the row
+                        targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        targetRow.classList.add('highlight');
+                        
+                        // Remove highlight after a delay
+                        setTimeout(() => {
+                            targetRow.classList.remove('highlight');
+                        }, 2500);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
