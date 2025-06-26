@@ -121,7 +121,7 @@
 
 
             // --- D3.js Visualization Logic ---
-            const width = 800;
+            const width = 900;
             const height = 600;
 
             // Root node positioning can be easily adjusted here
@@ -132,7 +132,6 @@
             const nodes = [];
             const links = [];
             const categories = {};
-
             const rootNode = { id: 'AI System', type: 'root', fx: rootNodeX, fy: rootNodeY };
             nodes.push(rootNode);
 
@@ -192,7 +191,7 @@
                 .attr("y", d => d.type === 'root' ? 0 : 5)
                 .attr("text-anchor", d => d.type === 'root' ? 'middle' : 'start')
                 .attr("alignment-baseline", "middle")
-                .style("font-size", d => d.type === 'root' ? "16px" : (d.type === 'category' ? "14px" : "11px"))
+                .style("font-size", d => d.type === 'root' ? "14px" : (d.type === 'category' ? "14px" : "11px"))
                 .style("font-weight", d => d.type === 'root' || d.type === 'category' ? "600" : "400")
                 .attr("fill", d => d.type === 'root' ? "white" : "#334155");
 
