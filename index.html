@@ -2,9 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="description" content="An interactive guide to the SPDX 3.0 AI Profile">
+    <meta name="author" content="Omar Santos">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Bill of Materials (BOM) Explainer</title>
+    <title>SPDX AI Bill of Materials (BOM) Explainer</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -49,7 +52,7 @@
         <!-- Header Section -->
         <header class="text-center mb-12">
             <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-2">Understanding the AI Bill of Materials</h1>
-            <p class="text-lg text-slate-600">An Interactive Guide to the SPDX 3.0 AI Profile</p>
+            <p class="text-lg text-slate-600">An Interactive Guide to the SPDX 3.0 AI Profile created by <a href="https://www.linkedin.com/in/santosomar/">Omar Santos</a></p>
         </header>
 
         <!-- Introduction -->
@@ -63,15 +66,8 @@
         <!-- Interactive Visualization -->
         <div class="w-full bg-white rounded-xl shadow-md p-4 md:p-6 mb-12">
             <h2 class="text-2xl font-semibold text-center text-slate-800 mb-6">Interactive AI System Overview</h2>
-            <div id="visualization-container" class="w-full overflow-x-auto">
-                 <svg id="ai-bom-svg" viewBox="0 0 800 550" class="w-full h-auto min-w-[700px]">
-                    <!-- Central Node -->
-                    <circle cx="400" cy="275" r="55" fill="#0284c7" />
-                    <text x="400" y="275" text-anchor="middle" dy=".3em" fill="white" font-weight="bold" font-size="16">AI System</text>
-                    
-                    <!-- Categories and connecting lines -->
-                    <g id="svg-nodes"></g>
-                </svg>
+            <div id="visualization-container" class="w-full flex justify-center items-center min-h-[600px]">
+                <svg id="d3-graph" class="w-full h-full"></svg>
             </div>
         </div>
 
@@ -97,7 +93,7 @@
 
         <!-- Footer -->
         <footer class="text-center mt-12 text-slate-500 text-sm">
-            <p>Built to demonstrate the concepts of the SPDX 3.0 AI Profile.</p>
+            <p>Built to demonstrate the concepts of the SPDX 3.0 AI Profile. Created by <a href="https://www.linkedin.com/in/santosomar/" class="text-blue-600 hover:text-blue-800">Omar Santos</a></p>
         </footer>
     </div>
 
@@ -123,9 +119,112 @@
                 { term: 'AI/typeOfModel', category: 'Core Components', concept: 'The specific architectural class or category of the AI model.', purpose: 'Provides insight into the model\'s fundamental structure, capabilities, and inherent characteristics.', examples: '`Neural Network`, `Decision Tree`, `Support Vector Machine (SVM)`, `Large Language Model (LLM)`.' }
             ];
 
-            const matrixBody = document.getElementById('bom-matrix-body');
+
+            // --- D3.js Visualization Logic ---
+            const width = 800;
+            const height = 600;
+
+            // 1. Prepare the data for D3
+            const nodes = [];
+            const links = [];
+            const categories = {};
+
+            const rootNode = { id: 'AI System', type: 'root', fx: width / 2, fy: height / 2 };
+            nodes.push(rootNode);
+
+            matrixData.forEach(item => {
+                if (!categories[item.category]) {
+                    const categoryNode = { id: item.category, type: 'category' };
+                    categories[item.category] = categoryNode;
+                    nodes.push(categoryNode);
+                    links.push({ source: rootNode.id, target: categoryNode.id });
+                }
+                const termNode = { id: item.term, type: 'term', category: item.category };
+                nodes.push(termNode);
+                links.push({ source: categories[item.category].id, target: termNode.id });
+            });
+
+            const svg = d3.select("#d3-graph")
+                .attr("viewBox", [0, 0, width, height]);
+
+            const simulation = d3.forceSimulation(nodes)
+                .force("link", d3.forceLink(links).id(d => d.id).distance(d => d.target.type === 'term' ? 60 : 150))
+                .force("charge", d3.forceManyBody().strength(-300))
+                .force("center", d3.forceCenter(width / 2, height / 2));
+
+            const link = svg.append("g")
+                .attr("stroke", "#cbd5e1")
+                .attr("stroke-opacity", 0.8)
+                .selectAll("line")
+                .data(links)
+                .join("line")
+                .attr("stroke-width", 1.5);
+
+            const nodeColors = {
+                'Core Components': '#22c55e',
+                'Training & Data': '#3b82f6',
+                'Performance & Evaluation': '#a855f7',
+                'Risk & Compliance': '#ef4444',
+                'Operational Context': '#f97316',
+                'root': '#0284c7',
+                'category': '#475569'
+            };
             
-            // Populate the matrix table
+            const node = svg.append("g")
+                .selectAll("g")
+                .data(nodes)
+                .join("g")
+                .call(drag(simulation));
+
+            node.append("circle")
+                .attr("r", d => d.type === 'root' ? 35 : (d.type === 'category' ? 15 : 10))
+                .attr("fill", d => nodeColors[d.type === 'term' ? d.category : d.type])
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 1.5);
+
+            node.append("text")
+                .text(d => d.id)
+                .attr("x", d => d.type === 'root' ? 0 : (d.type === 'category' ? 20 : 15))
+                .attr("y", d => d.type === 'root' ? 0 : 5)
+                .attr("text-anchor", d => d.type === 'root' ? 'middle' : 'start')
+                .attr("alignment-baseline", "middle")
+                .style("font-size", d => d.type === 'root' ? "16px" : (d.type === 'category' ? "14px" : "11px"))
+                .style("font-weight", d => d.type === 'root' || d.type === 'category' ? "600" : "400")
+                .attr("fill", d => d.type === 'root' ? "white" : "#334155");
+
+            simulation.on("tick", () => {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                node
+                    .attr("transform", d => `translate(${d.x}, ${d.y})`);
+            });
+
+            function drag(simulation) {
+                function dragstarted(event, d) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x;
+                    d.fy = d.y;
+                }
+                function dragged(event, d) {
+                    d.fx = event.x;
+                    d.fy = event.y;
+                }
+                function dragended(event, d) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    d.fx = null;
+                    d.fy = null;
+                }
+                return d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended);
+            }
+
+            const matrixBody = document.getElementById('bom-matrix-body');
             matrixData.forEach(item => {
                 const row = document.createElement('tr');
                 row.className = 'border-b hover:bg-slate-50 transition-colors duration-200';
@@ -139,136 +238,20 @@
                 matrixBody.appendChild(row);
             });
 
-            // --- SVG Visualization Logic ---
-            const svgNodesContainer = document.getElementById('svg-nodes');
-            const categories = {};
-            
-            matrixData.forEach(item => {
-                if (!categories[item.category]) {
-                    categories[item.category] = [];
+            node.on('click', function(event, d) {
+                if (d.type !== 'term') return;
+
+                const targetRow = document.querySelector(`tr[data-term="${d.id}"]`);
+                if (targetRow) {
+                    document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+                    targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    targetRow.classList.add('highlight');
+                    setTimeout(() => {
+                        targetRow.classList.remove('highlight');
+                    }, 2500);
                 }
-                categories[item.category].push(item.term);
             });
-            
-            const categoryPositions = {
-                'Core Components': { angle: 22.5, distance: 220, x: 485, y: 195 },
-                'Training & Data': { angle: 90, distance: 250, x: 400, y: 70 },
-                'Performance & Evaluation': { angle: 157.5, distance: 220, x: 315, y: 195 },
-                'Risk & Compliance': { angle: 225, distance: 220, x: 315, y: 355 },
-                'Operational Context': { angle: 292.5, distance: 250, x: 400, y: 480 },
-            };
-            
-            const nodeColors = {
-                'Core Components': '#22c55e', // green-500
-                'Training & Data': '#3b82f6', // blue-500
-                'Performance & Evaluation': '#a855f7', // purple-500
-                'Risk & Compliance': '#ef4444', // red-500
-                'Operational Context': '#f97316', // orange-500
-            };
-
-            const centralPoint = { x: 400, y: 275 };
-            let nodeAngleIncrement = 25;
-
-            Object.keys(categories).forEach(category => {
-                const pos = categoryPositions[category];
-                const color = nodeColors[category];
-                const terms = categories[category];
-                
-                // Draw line to category title
-                const lineToTitle = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                const categoryX = centralPoint.x + pos.distance * Math.cos(pos.angle * Math.PI / 180);
-                const categoryY = centralPoint.y - pos.distance * Math.sin(pos.angle * Math.PI / 180);
-                lineToTitle.setAttribute('x1', centralPoint.x);
-                lineToTitle.setAttribute('y1', centralPoint.y);
-                lineToTitle.setAttribute('x2', categoryX);
-                lineToTitle.setAttribute('y2', categoryY);
-                lineToTitle.setAttribute('class', 'line');
-                svgNodesContainer.appendChild(lineToTitle);
-                
-                // Category Title
-                const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                title.setAttribute('x', categoryX);
-                title.setAttribute('y', categoryY);
-                title.setAttribute('text-anchor', 'middle');
-                title.setAttribute('class', 'category-title');
-                title.textContent = category;
-                svgNodesContainer.appendChild(title);
-
-                // Individual term nodes
-                terms.forEach((term, index) => {
-                    // Spread nodes around the category title
-                    const angleOffset = (index - (terms.length - 1) / 2) * nodeAngleIncrement;
-                    const nodeAngle = pos.angle + angleOffset;
-                    const nodeDist = pos.distance + 60;
-
-                    const nodeX = centralPoint.x + nodeDist * Math.cos(nodeAngle * Math.PI / 180);
-                    const nodeY = centralPoint.y - nodeDist * Math.sin(nodeAngle * Math.PI / 180);
-
-                    const nodeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                    nodeGroup.setAttribute('class', 'node');
-                    nodeGroup.setAttribute('data-term', term);
-                    nodeGroup.setAttribute('transform', `translate(${nodeX}, ${nodeY})`);
-
-                    const nodeCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    nodeCircle.setAttribute('r', '25');
-                    nodeCircle.setAttribute('fill', color);
-                    nodeCircle.setAttribute('stroke', 'white');
-                    nodeCircle.setAttribute('stroke-width', '2');
-
-                    const nodeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                    nodeText.setAttribute('text-anchor', 'middle');
-                    nodeText.setAttribute('fill', 'white');
-                    nodeText.setAttribute('class', 'node-text font-semibold');
-                    
-                    const termParts = term.split('/');
-                    const tspan1 = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-                    tspan1.setAttribute('x', '0');
-                    tspan1.setAttribute('dy', '-0.3em');
-                    tspan1.textContent = termParts[0];
-                    const tspan2 = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-                    tspan2.setAttribute('x', '0');
-                    tspan2.setAttribute('dy', '1.2em');
-                    tspan2.textContent = termParts[1];
-
-                    nodeText.appendChild(tspan1);
-                    nodeText.appendChild(tspan2);
-                    
-                    nodeGroup.appendChild(nodeCircle);
-                    nodeGroup.appendChild(nodeText);
-                    svgNodesContainer.appendChild(nodeGroup);
-                    
-                    // Line from category title to node
-                    const lineToNode = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    lineToNode.setAttribute('x1', categoryX);
-                    lineToNode.setAttribute('y1', categoryY);
-                    lineToNode.setAttribute('x2', nodeX);
-                    lineToNode.setAttribute('y2', nodeY);
-                    lineToNode.setAttribute('class', 'line');
-                    svgNodesContainer.insertBefore(lineToNode, svgNodesContainer.firstChild);
-                });
-            });
-
-            // --- Interactivity Logic ---
-            document.querySelectorAll('.node').forEach(node => {
-                node.addEventListener('click', function () {
-                    const term = this.getAttribute('data-term');
-                    const targetRow = document.querySelector(`tr[data-term="${term}"]`);
-
-                    if (targetRow) {
-                        // Remove previous highlights
-                        document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
-
-                        // Scroll to and highlight the row
-                        targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        targetRow.classList.add('highlight');
-                        
-                        // Remove highlight after a delay
-                        setTimeout(() => {
-                            targetRow.classList.remove('highlight');
-                        }, 2500);
-                    }
-                });
-            });
+        
         });
     </script>
 </body>
