@@ -124,12 +124,15 @@
             const width = 900;
             const height = 600;
 
+            // Root node positioning can be easily adjusted here
+            const rootNodeX = width / 2;
+            const rootNodeY = height / 2;
+
             // 1. Prepare the data for D3
             const nodes = [];
             const links = [];
             const categories = {};
-
-            const rootNode = { id: 'AI System', type: 'root', fx: width / 1.5, fy: height / 1.5 };
+            const rootNode = { id: 'AI System', type: 'root', fx: rootNodeX, fy: rootNodeY };
             nodes.push(rootNode);
 
             matrixData.forEach(item => {
