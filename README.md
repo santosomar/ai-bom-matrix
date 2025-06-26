@@ -1,9 +1,10 @@
 # Interactive SPDX AI Bill of Materials (BOM) Explainer
 
-This is an interactive, single-page web application designed to explain the key concepts and properties of the SPDX 3.0 AI Profile. The tool provides a user-friendly interface to explore the components of an AI Bill of Materials (BOM) through a dynamic, force-directed graph and a detailed matrix.
+This is an interactive, [single-page web application](https://aibom.aisecurityresearch.org/) designed to explain the key concepts and properties of the SPDX 3.0 AI Profile. The tool provides a user-friendly interface to explore the components of an AI Bill of Materials (BOM) through a dynamic, force-directed graph and a detailed matrix.
 
 This project was created by [Omar Santos](https://www.linkedin.com/in/santosomar/).
 
+This tool can be accessed at: https://aibom.aisecurityresearch.org 
 ## Features
 
 - **Interactive Force-Directed Graph:** A dynamic visualization built with D3.js that shows the relationships between the core AI System, its categories, and specific SPDX terms.
